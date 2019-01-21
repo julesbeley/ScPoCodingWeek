@@ -6,17 +6,25 @@ mean(rne$Age[rne$Député  == TRUE], na.rm = T)
 # functions for tidying data:
 # filter(), slice(), arrange(), select(), rename(), distinct(), mutate(), group_by(), summarise(), sample_n / sample_frac()
 summary(rne)
+
 rne %>%
-  filter(`Code sexe` %in% "F") #only elected women %in% instead of == to get rid of NAs
+  filter(`Code sexe` %in% "F") # only elected women %in% instead of == to get rid of NAs
 # pipe is particularly useful when using several filters:
 rne_female <- rne %>%
   filter(`Code sexe` %in% "F") %>%
   mutate(`Code sexe` = recode(`Code sexe`, "F" = "Female", "M" = "Male")) %>%
-  #mutate because we want to modify a variable, recode to recode it
-  arrange(desc(`Date de naissance`)) %>% #desc for descending otherwise arrange(`Date de naissance`)
+  # mutate because we want to modify a variable, recode to recode it
+  arrange(desc(`Date de naissance`)) %>% # desc for descending otherwise arrange(`Date de naissance`)
   # select(`Code sexe`, `Date de naissance`, `Libellé de la profession`) %>% #-VARIABLE if you want to remove
-  group_by(`Libellé de la profession`) %>% #creating group doesn't change anything
-  summarise(n = n(), age = mean(Age)) %>% #number AND average age per group
+  group_by(`Libellé de la profession`) %>% # creating group doesn't change anything
+  summarise(n = n(), age = mean(Age)) %>% # number AND average age per group
   arrange(desc(n)) %>% #we want to summarise
+  View()
+
+# pivoting between long and large format (gather & spread)
+rne %>% 
+  gather("office", "value", `Conseiller Municipal`: `Maire`) %>% # we get rows for offices not held (== FALSE)
+  filter(value %in% TRUE) %>% # so we filter rows for which value == TRUE %>% 
+  select(-value) %>% # remove 'value' column
   View()
 
