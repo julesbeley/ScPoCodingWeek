@@ -1,7 +1,7 @@
 library(tidyverse)
 library(dplyr)
 rne <- read_csv("Repertoire-national-des-elus.csv")
-mean(rne$Age[rne$Député     == TRUE], na.rm = T)
+mean(rne$Age[rne$Député      == TRUE], na.rm = T)
 
 #the pipe (ctrl+shift+m) to create pipelines
 # functions for tidying data:
@@ -104,4 +104,25 @@ library(fuzzyjoin)
 # group_by(), summarize(), arrange() = count(sort = TRUE)
 
 # VISUALIZATION: ggplot2 (grammar of graphics)
-# elements: data, aesthetic mapping, layers, scales, coordinate system, small multiples, theme
+# elements: data, aesthetic mapping, layers, scales, coordinate system, small multiples, theme (only part that isn't data-driven)
+
+# mapping distribution of women and men
+
+library(ggplot2)
+library(scales)
+rne %>%
+  ggplot(aes(x = `Code sexe`)) +
+  geom_bar() + # default stat argument for geom_bar() is count, so we don't need to add anything
+  scale_y_continuous(labels = scales::comma) # get rid of engineer notation
+
+# distribution by profession
+
+rne %>%
+  count(`Libellé de la profession`, sort = TRUE) %>%
+  arrange(n) %>% 
+  mutate(occupation = fct_inorder(`Libellé de la profession`))
+  ggplot(aes(x = `Libellé de la profession`, y = n)) +
+  geom_bar(stat = "identity") +
+  coord_flip() +
+  scale_y_continuous(labels = scales::comma)
+  
