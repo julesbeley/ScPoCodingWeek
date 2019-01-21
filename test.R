@@ -12,10 +12,11 @@ rne %>%
 rne_female <- rne %>%
   filter(`Code sexe` %in% "F") %>%
   mutate(`Code sexe` = recode(`Code sexe`, "F" = "Female", "M" = "Male")) %>%
-  #mutate because we want to modify a bariable, recode to recode it
+  #mutate because we want to modify a variable, recode to recode it
   arrange(desc(`Date de naissance`)) %>% #desc for descending otherwise arrange(`Date de naissance`)
   # select(`Code sexe`, `Date de naissance`, `Libellé de la profession`) %>% #-VARIABLE if you want to remove
   group_by(`Libellé de la profession`) %>% #creating group doesn't change anything
-  summarise(n = n()) %>%
+  summarise(n = n(), age = mean(Age)) %>% #number AND average age per group
   arrange(desc(n)) %>% #we want to summarise
   View()
+
