@@ -180,17 +180,35 @@ tm_compass(position = c("left", "top"))
 # overpass Turbo + tags on Openstreetmap wiki
 # search for tags on Openstreetmap wiki, send request on overpass Turbo and download as .geojson
 
-library(OpenStreetMap) # osm package (JAVA_HOME PROBLEM)
+Sys.setenv(JAVA_HOME="C:/Program Files/Java/jdk-11.0.2/") #(JAVA_HOME PROBLEM)
+library(OpenStreetMap) 
 library(rJava)
+devtools::install_github("mtennekes/tmaptools")
 library(tmaptools)
-churches <- read_sf("./data/export.geojson")
-basemap <- read_osm(churches, type = "stamen-toner") # create basemap with osm package
+churches <- read_sf("./data/churchesLyon.geojson")
+basemap <- read_osm(churches, type = "stamen-toner") # create basemap with tmaptools package
 tm_shape(basemap) +
   tm_rgb() +
 tm_shape(churches) +
-  tm_dots(shape = 3, col = "blue") +
+  tm_dots(shape = 3, col = "blue", size = 0.2) +
   tm_scale_bar(position = c("left", "bottom")) 
 
 # showing trends in the data (e.g. heat maps)
 
-churches_density <- smooth_map(churches, bandwidth = 0.5)
+churches <- st_transform(churches, crs = 2154) # re-project (crs is code for new projection)
+pdf(file = "./plot3.pdf", width = 10, height = 10) # NULL?
+churches_density <- smooth_map(churches, bandwidth = 0.8, smooth.raster = FALSE) # be careful to extract only points from overpass turbo (not points AND polygons), 
+# i.e. comment out 'ways' lines in Overpass turbo with //, keep only nodes (some data is loss because some churches only exist as polygons, i.e. buildings, and not as nodes)
+dev.off()
+
+# APIs v. SDK (toolbox, much broader)
+# using httr for example to geolocalize adresses
+
+library(httr) # allows us to query APIs
+library(sf)
+url <- "https://api-adresse.data.gouv.fr/search" # point d'entrée pour le géocodage
+query <- GET(url, query = list(q = "13, chemin de Boutary")) # GET function, query must be wrapped in a list and we need q for simple text research
+status_code(query) # 200 means OK, cf status codes
+geojson <- content(query, as = "text") # content function transforms the answer, ask not to parse
+adresses <- read_sf(geojson) # and then we can transform it with read_sf
+mapview::mapview(adresses)
