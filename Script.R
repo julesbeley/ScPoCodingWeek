@@ -116,25 +116,35 @@ rne %>%
 
 # distribution by profession
 
+pdf(file = "./plot2.pdf", width = 7, height = 9) # create file to save plot as a pdf (vector format)
 rne %>%
-  count(`Libellé de la profession`, sort = TRUE) %>%
+  mutate(gender = recode(`Code sexe`, "M" = "Male", "F" = "Female")) %>% 
+  count(`Libellé de la profession`, gender, sort = TRUE) %>%
   filter(!is.na(`Libellé de la profession`)) %>% 
-  arrange(n) %>% 
+  ungroup %>% 
+  arrange(gender, n) %>% 
   filter(n > 1000) %>% # get rid of all values for which n > 1000
+  mutate(order = row_number()) %>% 
   mutate(occupation = fct_inorder(`Libellé de la profession`)) %>% # factor in order
-  mutate(coord = if_else(n > 40000, n - 2000, n + 2000), # create new coordinate variable to put labels over the bars on the top
-         color = if_else(n > 40000, "white", "black ")) %>%  # create new color variable for the text
-  ggplot(aes(x = occupation, y = n)) +
+  mutate(coord = if_else(n > 22000, n - 2000, n + 1000), # create new coordinate variable to put labels over the bars on the top
+         color = if_else(n > 22000, "white", "black ")) %>%  # create new color variable for the text
+  ggplot(aes(x = order, y = n)) +
+  scale_fill_discrete(guide = FALSE) +
   geom_bar(stat = "identity", width = 0.8, fill = "darkblue") + # change width and color of bars
-  scale_y_continuous(labels = scales::comma) + # get rid of engineer notation
+  scale_y_continuous(labels = scales::comma) + # get rid of engineer notation with comma from scales package
   coord_flip() + # flip y and x axis
   geom_text(aes(label = occupation, y = coord, colour = color), 
             hjust = "inward", vjust = "center", size = 2.3) + # add labels on the right with inward horizontal justification and text size 2.5
   scale_color_manual(values = c("darkblue", "white"), guide = FALSE) + # set up manual color scale with no guide (legend)
   xlab("") + # because coord_flip, xlab is actually for y axis label
   ylab("") +
+  ylim(0, NA) +  
   scale_x_discrete(labels = NULL) + #remove labels
   theme(axis.ticks.y = element_blank()) + # remove ticks on y axis
-  labs(title = "Most elected officials are employees, famers or retired",
+  facet_wrap(facets = vars(gender), scales = "free_y") +
+  labs(title = "Most elected officials are employees, farmers or retired",
        subtitle = "Number of elected officials in France in 2018 by occupation",
-       caption = "Source: RNE, computation by Sciences Po students")
+       caption = "Source: RNE, computation by Sciences Po students")  
+dev.off() # device off after writing file
+
+# mapping data
