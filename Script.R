@@ -141,10 +141,56 @@ rne %>%
   ylim(0, NA) +  
   scale_x_discrete(labels = NULL) + #remove labels
   theme(axis.ticks.y = element_blank()) + # remove ticks on y axis
-  facet_wrap(facets = vars(gender), scales = "free_y") +
+  facet_wrap(facets = vars(gender), scales = "free_y") + # separate female and male
   labs(title = "Most elected officials are employees, farmers or retired",
        subtitle = "Number of elected officials in France in 2018 by occupation",
-       caption = "Source: RNE, computation by Sciences Po students")  
+       caption = "Source: RNE, computation by Sciences Po students") +
+  theme_minimal()
 dev.off() # device off after writing file
 
-# mapping data
+# spatial data
+# features are dots, lines or polygons
+# two formats: vector and raster (vector is always scalable without loss because we have information about the geometry)
+
+library(sf) # package for tidy spatial data
+library(mapview) 
+library(leaflet) # leaflet is a javascript package originally, used a lot on the web
+toilets <- read_sf("./data/sanisettesparis2011.geojson") # .geojson is becoming a standard for spatial data
+mapview(toilets) # to view the data quickly
+toilets %>% 
+  leaflet() %>% # to create interactive maps for the web
+  addTiles() %>% # add background
+  addCircleMarkers(radius = 2, color = "red")
+
+# using tmap for elaborate maps, e.g. toilets and trees on street background with compass and scale
+
+library(tmap)
+streets <- read_sf("./data/voie.geojson") # streets of Paris
+trees <- read_sf("./data/arbresremarquablesparis.geojson") # remarkable trees
+streets %>% 
+  tm_shape() + # all tmap functions start with tm_
+  tm_lines(alpha = 0.2) +
+tm_shape(toilets) +
+  tm_dots(col = "red") +
+tm_shape(trees) +
+  tm_dots(col = "darkgreen") +
+tm_scale_bar(position = c("left", "bottom")) +
+tm_compass(position = c("left", "top"))
+
+# overpass Turbo + tags on Openstreetmap wiki
+# search for tags on Openstreetmap wiki, send request on overpass Turbo and download as .geojson
+
+library(OpenStreetMap) # osm package (JAVA_HOME PROBLEM)
+library(rJava)
+library(tmaptools)
+churches <- read_sf("./data/export.geojson")
+basemap <- read_osm(churches, type = "stamen-toner") # create basemap with osm package
+tm_shape(basemap) +
+  tm_rgb() +
+tm_shape(churches) +
+  tm_dots(shape = 3, col = "blue") +
+  tm_scale_bar(position = c("left", "bottom")) 
+
+# showing trends in the data (e.g. heat maps)
+
+churches_density <- smooth_map(churches, bandwidth = 0.5)
