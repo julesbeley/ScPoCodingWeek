@@ -197,7 +197,7 @@ tm_shape(churches) +
 
 churches <- st_transform(churches, crs = 2154) # re-project (crs is code for new projection)
 pdf(file = "./plot3.pdf", width = 10, height = 10) # NULL?
-churches_density <- smooth_map(churches, bandwidth = 0.8) # be careful to extract only points from overpass turbo (not points AND polygons), 
+churches_density <- smooth_map(churches, bandwidth = 0.5) # be careful to extract only points from overpass turbo (not points AND polygons), 
 # i.e. comment out 'ways' lines in Overpass turbo with //, keep only nodes (some data is loss because some churches only exist as polygons, i.e. buildings, and not as nodes)
 dev.off()
 
